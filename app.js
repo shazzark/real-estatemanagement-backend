@@ -29,9 +29,16 @@ const agentApplicationRoutes = require('./routes/agentApplicationRoutes');
 
 const app = express();
 
+// ==================== FIX 1: Update CORS ====================
 app.use(
   cors({
-    origin: ['http://localhost:3001', 'http://172.23.192.1:3001'],
+    origin: [
+      'http://localhost:3001',
+      'http://172.23.192.1:3001',
+      'https://real-estate-frontend.onrender.com',
+      'http://localhost:3000', // ADD THIS for frontend
+      'https://real-estate-frontend.vercel.app', // ADD if you deploy frontend
+    ],
     credentials: true,
   }),
 );
@@ -41,17 +48,62 @@ app.use(cookieParser());
 // SET SECURITY HTTP HEADERS
 app.use(helmet());
 
-app.use(
-  '/img',
-  (req, res, next) => {
-    res.setHeader('Access-Control-Allow-Origin', 'http://localhost:3001');
-    res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin'); // key for images
-    next();
-  },
-  express.static(path.join(__dirname, 'img')),
-);
+// ==================== FIX 2: Add Global CORS Headers ====================
+app.use((req, res, next) => {
+  // Set CORS headers for ALL responses
+  const allowedOrigins = [
+    'http://localhost:3001',
+    'http://172.23.192.1:3001',
+    'https://real-estate-frontend.onrender.com',
+    'http://localhost:3000',
+  ];
+  
+  const origin = req.headers.origin;
+  if (allowedOrigins.includes(origin)) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+  } else {
+    res.setHeader('Access-Control-Allow-Origin', '*'); // Fallback
+  }
+  
+  res.setHeader('Access-Control-Allow-Credentials', 'true');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization, Cookie');
+  
+  // Handle preflight requests
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end();
+  }
+  
+  next();
+});
 
-// app.use('/img', express.static(path.join(__dirname, 'public/img')));
+// ==================== FIX 3: Update Image Serving ====================
+// Remove or comment out the old img middleware:
+// app.use(
+//   '/img',
+//   (req, res, next) => {
+//     res.setHeader('Access-Control-Allow-Origin', 'http://localhost:3001');
+//     res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin'); // key for images
+//     next();
+//   },
+//   express.static(path.join(__dirname, 'img')),
+// );
+
+// Add this new img middleware:
+app.use('/img', express.static(path.join(__dirname, 'public/img'), {
+  setHeaders: (res, filePath) => {
+    // Allow images from any origin
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
+    res.setHeader('Cache-Control', 'public, max-age=31536000'); // Cache for 1 year
+    
+    // Log for debugging (remove in production)
+    if (process.env.NODE_ENV !== 'production') {
+      console.log(`Serving image: ${filePath}`);
+    }
+  }
+}));
+
 // GLOBAL MIDDLEWARE
 
 // if (process.env.NODE_ENV === "development") {
@@ -106,7 +158,9 @@ app.use((req, res, next) => {
   next();
 });
 
-app.use('/img', express.static(path.join(__dirname, 'public/img')));
+// ==================== FIX 4: Remove duplicate img serving ====================
+// Remove or comment out this duplicate line:
+// app.use('/img', express.static(path.join(__dirname, 'public/img')));
 
 // ROUTES
 
@@ -127,16 +181,6 @@ app.all('*', (req, res, next) => {
   next(new AppError(`cant find ${req.originalUrl} on this server`));
 });
 
-// app.use((err, req, res, next) => {
-//   console.log('>>> SIMPLE ERROR HANDLER CALLED');
-//   console.log('>>> Error message:', err.message);
-//   console.log('>>> Error status:', err.statusCode);
-
-//   res.status(err.statusCode || 500).json({
-//     status: err.status || 'error',
-//     message: err.message,
-//   });
-// });
-// error handling middleware
+ 
 app.use(globalErrorHandler);
 module.exports = app;
