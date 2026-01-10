@@ -96,11 +96,6 @@ exports.getAllProperties = catchAsync(async (req, res, next) => {
 //   });
 // });
 
-const mongoose = require('mongoose');
-const Property = require('../model/propertyModel');
-const catchAsync = require('../utils/catchAsync');
-const AppError = require('../utils/appError');
-
 exports.getProperty = catchAsync(async (req, res, next) => {
   const { id } = req.params;
 
