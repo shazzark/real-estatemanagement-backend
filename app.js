@@ -122,7 +122,19 @@ const limiter = rateLimit({
   message: 'too many request from this IP, try again later',
 });
 
-app.use('/api', limiter);
+// app.use('/api', limiter);
+
+app.use('/api', (req, res, next) => {
+  // Skip rate-limit for file uploads
+  if (
+    req.method === 'POST' &&
+    req.originalUrl.startsWith('/api/v1/properties')
+  ) {
+    return next();
+  }
+
+  return limiter(req, res, next);
+});
 
 // ==================== BODY PARSERS ====================
 app.use(express.json({ limit: '10kb' }));
