@@ -47,14 +47,11 @@ exports.getUser = catchAsync(async (req, res, next) => {
 });
 
 exports.getMe = catchAsync(async (req, res, next) => {
-  // req.user is set from protect middleware
   const user = await User.findById(req.user.id);
 
   res.status(200).json({
     status: 'success',
-    data: {
-      user,
-    },
+    data: { user },
   });
 });
 
@@ -86,44 +83,64 @@ exports.getMe = catchAsync(async (req, res, next) => {
 //   });
 // });
 
-exports.updateMe = catchAsync(async (req, res, next) => {
-  console.log('UPDATE ME BODY:', req.body); // Add this
-  console.log('User ID:', req.user.id); // Add this
+// exports.updateMe = catchAsync(async (req, res, next) => {
+//   console.log('UPDATE ME BODY:', req.body); // Add this
+//   console.log('User ID:', req.user.id); // Add this
 
-  // 1) Create error if user POSTs password data
+//   // 1) Create error if user POSTs password data
+//   if (req.body.password || req.body.passwordConfirm) {
+//     return next(
+//       new AppError(
+//         'This route is not for password updates. Please use /updateMyPassword.',
+//         400,
+//       ),
+//     );
+//   }
+
+//   // 2) Filtered out unwanted fields that are not allowed to be updated
+//   const filteredBody = filterObj(
+//     req.body,
+//     'name',
+//     'email',
+//     'phone',
+//     'photo',
+//     'role',
+//   );
+//   console.log('FILTERED BODY:', filteredBody); // Add this
+
+//   // 3) Update user document
+//   const updatedUser = await User.findByIdAndUpdate(req.user.id, filteredBody, {
+//     new: true,
+//     runValidators: true,
+//   });
+
+//   console.log('UPDATED USER:', updatedUser); // Add this
+
+//   res.status(200).json({
+//     status: 'success',
+//     data: {
+//       user: updatedUser,
+//     },
+//   });
+// });
+exports.updateMe = catchAsync(async (req, res, next) => {
   if (req.body.password || req.body.passwordConfirm) {
     return next(
-      new AppError(
-        'This route is not for password updates. Please use /updateMyPassword.',
-        400,
-      ),
+      new AppError('Use /updateMyPassword for password changes', 400),
     );
   }
 
-  // 2) Filtered out unwanted fields that are not allowed to be updated
-  const filteredBody = filterObj(
-    req.body,
-    'name',
-    'email',
-    'phone',
-    'photo',
-    'role',
-  );
-  console.log('FILTERED BODY:', filteredBody); // Add this
+  // Remove role from allowed updates (security)
+  const filteredBody = filterObj(req.body, 'name', 'email', 'phone', 'photo');
 
-  // 3) Update user document
   const updatedUser = await User.findByIdAndUpdate(req.user.id, filteredBody, {
     new: true,
     runValidators: true,
   });
 
-  console.log('UPDATED USER:', updatedUser); // Add this
-
   res.status(200).json({
     status: 'success',
-    data: {
-      user: updatedUser,
-    },
+    data: { user: updatedUser },
   });
 });
 
