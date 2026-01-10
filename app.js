@@ -35,18 +35,18 @@ const app = express();
 app.set('trust proxy', 1);
 
 // ==================== FIX 1: Update CORS ====================
-app.use(
-  cors({
-    origin: [
-      'http://localhost:3001',
-      'http://172.23.192.1:3001',
-      'https://real-estate-frontend.onrender.com',
-      'http://localhost:3000',
-      'https://real-estate-frontend.vercel.app',
-    ],
-    credentials: true,
-  }),
-);
+// app.use(
+//   cors({
+//     origin: [
+//       'http://localhost:3001',
+//       'http://172.23.192.1:3001',
+//       'https://real-estate-frontend.onrender.com',
+//       'http://localhost:3000',
+//       'https://real-estate-frontend.vercel.app',
+//     ],
+//     credentials: true,
+//   }),
+// );
 
 app.use(cookieParser());
 
