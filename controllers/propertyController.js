@@ -5,6 +5,7 @@ const AppError = require('../utils/appError');
 const fs = require('fs');
 const path = require('path');
 const notificationController = require('./notificationController');
+const mongoose = require('mongoose');
 
 // Alias Middlewares - Improved with constants
 const DEFAULT_LIMIT = 10;
