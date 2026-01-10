@@ -168,7 +168,60 @@ exports.getProperty = catchAsync(async (req, res, next) => {
 //   });
 // });
 
+// exports.createProperty = catchAsync(async (req, res, next) => {
+//   // Fix coordinates if they come as a string from form-data
+//   if (
+//     req.body.geoLocation &&
+//     req.body.geoLocation.coordinates &&
+//     typeof req.body.geoLocation.coordinates === 'string'
+//   ) {
+//     req.body.geoLocation.coordinates = req.body.geoLocation.coordinates
+//       .split(',')
+//       .map(Number);
+//   }
+
+//   // Validate coordinates range
+//   if (req.body.geoLocation && req.body.geoLocation.coordinates) {
+//     const [lng, lat] = req.body.geoLocation.coordinates;
+//     if (lng < -180 || lng > 180 || lat < -90 || lat > 90) {
+//       return next(new AppError('Invalid coordinates provided', 400));
+//     }
+//   }
+
+//   // Handle uploaded files from Multer (form-data)
+//   if (!req.files || req.files.length === 0) {
+//     return next(new AppError('Please upload at least one image', 400));
+//   }
+
+//   req.body.images = req.files.map((file, index) => ({
+//     url: `/img/properties/${file.filename}`, // frontend can use this path
+//     filename: file.filename,
+//     isPrimary: index === 0, // first image is primary
+//   }));
+
+//   // Only agents can create properties
+//   if (req.user.role !== 'agent') {
+//     return next(new AppError('Only agents can create properties', 403));
+//   }
+
+//   // Assign agent and owner
+//   req.body.agent = req.user.id;
+//   req.body.owner = req.user.id;
+
+//   // Create the property
+//   const newProperty = await Property.create(req.body);
+
+//   res.status(201).json({
+//     status: 'success',
+//     data: { property: newProperty },
+//   });
+// });
+
 exports.createProperty = catchAsync(async (req, res, next) => {
+  // ✅ DEBUG (remove later if you want)
+  console.log('BODY:', req.body);
+  console.log('FILES:', req.files);
+
   // Fix coordinates if they come as a string from form-data
   if (
     req.body.geoLocation &&
@@ -188,15 +241,16 @@ exports.createProperty = catchAsync(async (req, res, next) => {
     }
   }
 
-  // Handle uploaded files from Multer (form-data)
+  // ❗ REQUIRED: Handle uploaded files from Multer (form-data)
   if (!req.files || req.files.length === 0) {
     return next(new AppError('Please upload at least one image', 400));
   }
 
+  // ✅ Map files to schema-correct image objects
   req.body.images = req.files.map((file, index) => ({
-    url: `/img/properties/${file.filename}`, // frontend can use this path
     filename: file.filename,
-    isPrimary: index === 0, // first image is primary
+    url: `/api/v1/img/properties/${file.filename}`, // IMPORTANT: match your static route
+    isPrimary: index === 0,
   }));
 
   // Only agents can create properties
@@ -208,12 +262,14 @@ exports.createProperty = catchAsync(async (req, res, next) => {
   req.body.agent = req.user.id;
   req.body.owner = req.user.id;
 
-  // Create the property
+  // ✅ CREATE (this WILL now save)
   const newProperty = await Property.create(req.body);
 
   res.status(201).json({
     status: 'success',
-    data: { property: newProperty },
+    data: {
+      property: newProperty,
+    },
   });
 });
 
