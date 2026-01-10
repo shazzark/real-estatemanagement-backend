@@ -1,31 +1,11 @@
 const express = require('express');
 const propertyController = require('../controllers/propertyController');
 const authController = require('../controllers/authController');
-const upload = require('../utils/multer');
-
-// We'll create this next
+const upload = require('../utils/multer'); // Make sure this points to your multer setup
 
 const router = express.Router();
 
-// ======================
-// PUBLIC ROUTES
-// ======================
-
-// ALIASED ROUTES - Grouped logically
-// router
-//   .route('/featured/family-homes')
-//   .get(
-//     propertyController.aliasFamilyHomes,
-//     propertyController.getAllProperties,
-//   );
-
-// router
-//   .route('/featured/luxury')
-//   .get(
-//     propertyController.aliasLuxuryProperties,
-//     propertyController.getAllProperties,
-//   );
-
+// ================= FEATURED & SPECIAL ROUTES =================
 router
   .route('/featured/affordable')
   .get(
@@ -47,20 +27,6 @@ router
     propertyController.getAllProperties,
   );
 
-// router
-//   .route('/nearby-properties')
-//   .get(
-//     propertyController.aliasNearbyProperties,
-//     propertyController.getAllProperties,
-//   );
-
-// router
-//   .route('/new-listings') // Fixed: kebab-case consistency
-//   .get(
-//     propertyController.aliasNewListings,
-//     propertyController.getAllProperties,
-//   );
-
 router
   .route('/city/:cityName')
   .get(
@@ -68,46 +34,38 @@ router
     propertyController.getAllProperties,
   );
 
-// STATISTICS ROUTES - Better organized
+// ================= STATISTICS ROUTES =================
 router.route('/stats/summary').get(propertyController.getPropertyStats);
-
 router.route('/stats/cities').get(propertyController.getPropertyStatsByCity);
-
 router.route('/stats/top-cities').get(propertyController.getTopCities);
-
 router.route('/stats/top-agents').get(propertyController.getTopAgents);
-
 router.route('/stats/yearly/:year').get(propertyController.getYearlyListings);
-
-// ======================
-// PROTECTED ROUTES (Require Authentication)
-// ======================
-
-// Apply authentication to all following routes
-// router.use(authController.protect);
-
-// ADMIN/MANAGEMENT STATS
 router.route('/stats/monthly').get(
   // authController.restrictTo('admin', 'agent'),
   propertyController.getMonthlyListing,
 );
 
-// MAIN CRUD OPERATIONS
-router.route('/').get(propertyController.getAllProperties).post(
+// ================= MAIN CRUD ROUTES =================
+
+// GET all properties
+router.route('/').get(propertyController.getAllProperties);
+
+// CREATE new property (with multiple images)
+router.route('/').post(
   authController.protect,
   authController.restrictTo('admin', 'agent'),
-  upload.array('images', 5),
-  // Add validation middleware here later
+  upload.array('images', 5), // Handles up to 5 images
   propertyController.createProperty,
 );
 
+// GET / PATCH / DELETE individual property
 router
   .route('/:id')
   .get(propertyController.getProperty)
   .patch(
     authController.protect,
     authController.restrictTo('admin', 'agent'),
-    // Add ownership check middleware
+    upload.array('images', 5), // Optional: allow updating images
     propertyController.updateProperty,
   )
   .delete(
