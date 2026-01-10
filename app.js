@@ -57,15 +57,14 @@ app.use(helmet());
 const allowedOrigins = [
   'http://localhost:3000',
   'http://localhost:3001',
-  'http://172.23.192.1:3001',
-  'https://real-estate-frontend.onrender.com',
   'https://real-estate-frontend.vercel.app',
+  'https://real-estate-frontend.onrender.com',
 ];
 
 app.use(
   cors({
     origin: function (origin, callback) {
-      if (!origin) return callback(null, true);
+      if (!origin) return callback(null, true); // allow Postman or curl
 
       if (allowedOrigins.indexOf(origin) !== -1) {
         callback(null, true);
@@ -73,7 +72,7 @@ app.use(
         callback(new Error('Not allowed by CORS'));
       }
     },
-    credentials: true,
+    credentials: true, // must be true to allow cookies
     exposedHeaders: ['Content-Disposition'],
   }),
 );

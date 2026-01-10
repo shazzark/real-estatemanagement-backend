@@ -38,21 +38,80 @@ const signToken = (id) => {
 //   });
 // };
 
-const createSendToken = (user, statusCode, res) => {
+// const createSendToken = (user, statusCode, res) => {
+//   const token = signToken(user._id);
+//   const isLocalhost =
+//     res.req.headers.origin?.includes('localhost') ||
+//     res.req.headers.origin?.includes('127.0.0.1');
+
+//   const cookieOptions = {
+//     expires: new Date(
+//       Date.now() + process.env.JWT_COOKIE_EXPIRES_IN * 24 * 60 * 60 * 1000,
+//     ),
+//     httpOnly: true,
+//     // secure: process.env.NODE_ENV === 'production',
+//     secure: !isLocalhost,
+//     sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+//   };
+
+//   res.cookie('jwt', token, cookieOptions);
+
+//   user.password = undefined; // remove password from output
+
+//   res.status(statusCode).json({
+//     status: 'success',
+//     token,
+//     data: { user },
+//   });
+// };
+// const createSendToken = (user, statusCode, res) => {
+//   const token = signToken(user._id);
+
+//   const origin = res.req.headers.origin || '';
+//   const isLocalhost =
+//     origin.includes('localhost') || origin.includes('127.0.0.1');
+
+//   const cookieOptions = {
+//     httpOnly: true,
+//     expires: new Date(
+//       Date.now() + process.env.JWT_COOKIE_EXPIRES_IN * 24 * 60 * 60 * 1000,
+//     ),
+//     secure: !isLocalhost,
+//     sameSite: !isLocalhost ? 'none' : 'lax',
+//   };
+
+//   res.cookie('jwt', token, cookieOptions);
+
+//   user.password = undefined;
+
+//   res.status(statusCode).json({
+//     status: 'success',
+//     token,
+//     data: { user },
+//   });
+// };
+
+const createSendToken = (user, statusCode, req, res) => {
   const token = signToken(user._id);
 
+  const origin = req.headers.origin || '';
+  const isLocalhost =
+    origin.includes('localhost') ||
+    origin.includes('127.0.0.1') ||
+    origin.includes('::1');
+
   const cookieOptions = {
+    httpOnly: true,
     expires: new Date(
       Date.now() + process.env.JWT_COOKIE_EXPIRES_IN * 24 * 60 * 60 * 1000,
     ),
-    httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+    secure: !isLocalhost,
+    sameSite: !isLocalhost ? 'none' : 'lax',
   };
 
   res.cookie('jwt', token, cookieOptions);
 
-  user.password = undefined; // remove password from output
+  user.password = undefined;
 
   res.status(statusCode).json({
     status: 'success',
