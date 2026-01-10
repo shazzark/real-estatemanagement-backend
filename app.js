@@ -179,6 +179,13 @@ app.use('/api/v1/review', reviewRouter);
 app.use('/api/v1/payments', paymentRoutes);
 app.use('/api/v1/agent-applications', agentApplicationRoutes);
 
+app.get('/', (req, res) => {
+  res.status(200).json({
+    status: 'ok',
+    message: 'Real Estate API is running',
+  });
+});
+
 app.all('*', (req, res, next) => {
   next(new AppError(`cant find ${req.originalUrl} on this server`));
 });
