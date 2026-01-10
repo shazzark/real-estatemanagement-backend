@@ -79,20 +79,50 @@ exports.getAllProperties = catchAsync(async (req, res, next) => {
   });
 });
 
+// exports.getProperty = catchAsync(async (req, res, next) => {
+//   const property = await Property.findById(req.params.id);
+
+//   console.log(property);
+
+//   if (!property) {
+//     return next(new AppError('No property found with that ID', 404));
+//   }
+
+//   res.status(200).json({
+//     status: 'success',
+//     data: {
+//       property,
+//     },
+//   });
+// });
+
+const mongoose = require('mongoose');
+const Property = require('../model/propertyModel');
+const catchAsync = require('../utils/catchAsync');
+const AppError = require('../utils/appError');
+
 exports.getProperty = catchAsync(async (req, res, next) => {
-  const property = await Property.findById(req.params.id);
+  const { id } = req.params;
 
-  console.log(property);
+  // 1. Validate MongoDB ObjectId
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    return next(new AppError('Invalid property ID', 400));
+  }
 
+  // 2. Fetch property
+  const property = await Property.findById(id).select(
+    'title price location description status amenities images',
+  ); // Only get required fields, including images
+
+  // 3. If not found
   if (!property) {
     return next(new AppError('No property found with that ID', 404));
   }
 
+  // 4. Return response
   res.status(200).json({
     status: 'success',
-    data: {
-      property,
-    },
+    data: { property },
   });
 });
 
