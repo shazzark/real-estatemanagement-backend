@@ -29,6 +29,11 @@ const agentApplicationRoutes = require('./routes/agentApplicationRoutes');
 
 const app = express();
 
+/* =========================================================
+   ✅ REQUIRED FIX FOR RENDER + EXPRESS-RATE-LIMIT
+   ========================================================= */
+app.set('trust proxy', 1);
+
 // ==================== FIX 1: Update CORS ====================
 app.use(
   cors({
@@ -36,8 +41,8 @@ app.use(
       'http://localhost:3001',
       'http://172.23.192.1:3001',
       'https://real-estate-frontend.onrender.com',
-      'http://localhost:3000', // ADD THIS for frontend
-      'https://real-estate-frontend.vercel.app', // ADD if you deploy frontend
+      'http://localhost:3000',
+      'https://real-estate-frontend.vercel.app',
     ],
     credentials: true,
   }),
@@ -57,75 +62,60 @@ const allowedOrigins = [
   'https://real-estate-frontend.vercel.app',
 ];
 
-app.use(cors({
-  origin: function (origin, callback) {
-    // Allow requests with no origin (like mobile apps, curl, postman)
-    if (!origin) return callback(null, true);
-    
-    if (allowedOrigins.indexOf(origin) !== -1) {
-      callback(null, true);
-    } else {
-      callback(new Error('Not allowed by CORS'));
-    }
-  },
-  credentials: true,
-  exposedHeaders: ['Content-Disposition'], // Add if needed for file downloads
-}));
+app.use(
+  cors({
+    origin: function (origin, callback) {
+      if (!origin) return callback(null, true);
+
+      if (allowedOrigins.indexOf(origin) !== -1) {
+        callback(null, true);
+      } else {
+        callback(new Error('Not allowed by CORS'));
+      }
+    },
+    credentials: true,
+    exposedHeaders: ['Content-Disposition'],
+  }),
+);
 
 // ==================== FIX Image Static Serving ====================
-app.use('/api/v1/img', express.static(path.join(__dirname, 'public/img'), {
-  setHeaders: (res, filePath) => {
-    // Allow from all origins for images
-    res.setHeader('Access-Control-Allow-Origin', '*');
-    res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
-    res.setHeader('Cache-Control', 'public, max-age=31536000');
-    
-    if (process.env.NODE_ENV !== 'production') {
-      console.log(`📸 Serving image: ${filePath}`);
-    }
-  }
-}));
+app.use(
+  '/api/v1/img',
+  express.static(path.join(__dirname, 'public/img'), {
+    setHeaders: (res, filePath) => {
+      res.setHeader('Access-Control-Allow-Origin', '*');
+      res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
+      res.setHeader('Cache-Control', 'public, max-age=31536000');
 
-// Remove or comment out any other '/img' middleware
+      if (process.env.NODE_ENV !== 'production') {
+        console.log(`📸 Serving image: ${filePath}`);
+      }
+    },
+  }),
+);
 
 // ==================== FIX 3: Update Image Serving ====================
-// Remove or comment out the old img middleware:
-// app.use(
-//   '/img',
-//   (req, res, next) => {
-//     res.setHeader('Access-Control-Allow-Origin', 'http://localhost:3001');
-//     res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin'); // key for images
-//     next();
-//   },
-//   express.static(path.join(__dirname, 'img')),
-// );
+app.use(
+  '/img',
+  express.static(path.join(__dirname, 'public/img'), {
+    setHeaders: (res, filePath) => {
+      res.setHeader('Access-Control-Allow-Origin', '*');
+      res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
+      res.setHeader('Cache-Control', 'public, max-age=31536000');
 
-// Add this new img middleware:
-app.use('/img', express.static(path.join(__dirname, 'public/img'), {
-  setHeaders: (res, filePath) => {
-    // Allow images from any origin
-    res.setHeader('Access-Control-Allow-Origin', '*');
-    res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
-    res.setHeader('Cache-Control', 'public, max-age=31536000'); // Cache for 1 year
-    
-    // Log for debugging (remove in production)
-    if (process.env.NODE_ENV !== 'production') {
-      console.log(`Serving image: ${filePath}`);
-    }
-  }
-}));
-
-// GLOBAL MIDDLEWARE
-
-// if (process.env.NODE_ENV === "development") {
-//   app.use(morgan("dev"));
-// }
+      if (process.env.NODE_ENV !== 'production') {
+        console.log(`Serving image: ${filePath}`);
+      }
+    },
+  }),
+);
 
 // for development logging
 if (process.env.NODE_ENV !== 'production') {
   app.use(morgan('dev'));
 }
-// listen to request from api
+
+// ==================== RATE LIMITER ====================
 const limiter = rateLimit({
   max: 100,
   windowMs: 60 * 60 * 1000,
@@ -134,16 +124,14 @@ const limiter = rateLimit({
 
 app.use('/api', limiter);
 
-// body parser , reading data from body into req.body
-// app.use(express.json({ limit: '10mb' }));
-app.use(express.json({ limit: '10kb' })); // This line must be present
+// ==================== BODY PARSERS ====================
+app.use(express.json({ limit: '10kb' }));
 app.use(express.urlencoded({ limit: '10mb', extended: true }));
-// app.use(express.urlencoded({ extended: true, limit: '10kb' }));
 
-// data sanitization against  nosql query injection
+// data sanitization against NoSQL injection
 app.use(mongoSanitize());
 
-// data sanitisation against xss
+// data sanitization against XSS
 app.use(xss());
 
 // prevent parameter pollution
@@ -157,8 +145,6 @@ app.use(
       'area',
       'yearBuilt',
       'ratingQuantity',
-
-      // GEOGRAPHIC FIELDS
       'coordinates',
     ],
   }),
@@ -169,12 +155,7 @@ app.use((req, res, next) => {
   next();
 });
 
-// ==================== FIX 4: Remove duplicate img serving ====================
-// Remove or comment out this duplicate line:
-// app.use('/img', express.static(path.join(__dirname, 'public/img')));
-
-// ROUTES
-
+// ==================== ROUTES ====================
 app.use('/api/v1/properties', propertiesRouter);
 app.use('/api/v1/users', userRouter);
 app.use('/api/v1/location', locationRouter);
@@ -186,12 +167,10 @@ app.use('/api/v1/review', reviewRouter);
 app.use('/api/v1/payments', paymentRoutes);
 app.use('/api/v1/agent-applications', agentApplicationRoutes);
 
-// app.use('/api/v1/auth', authRouter);
-
 app.all('*', (req, res, next) => {
   next(new AppError(`cant find ${req.originalUrl} on this server`));
 });
 
- 
 app.use(globalErrorHandler);
+
 module.exports = app;
