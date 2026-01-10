@@ -48,34 +48,45 @@ app.use(cookieParser());
 // SET SECURITY HTTP HEADERS
 app.use(helmet());
 
-// ==================== FIX 2: Add Global CORS Headers ====================
-app.use((req, res, next) => {
-  // Set CORS headers for ALL responses
-  const allowedOrigins = [
-    'http://localhost:3001',
-    'http://172.23.192.1:3001',
-    'https://real-estate-frontend.onrender.com',
-    'http://localhost:3000',
-  ];
-  
-  const origin = req.headers.origin;
-  if (allowedOrigins.includes(origin)) {
-    res.setHeader('Access-Control-Allow-Origin', origin);
-  } else {
-    res.setHeader('Access-Control-Allow-Origin', '*'); // Fallback
+// ==================== FIX CORS for Images ====================
+const allowedOrigins = [
+  'http://localhost:3000',
+  'http://localhost:3001',
+  'http://172.23.192.1:3001',
+  'https://real-estate-frontend.onrender.com',
+  'https://real-estate-frontend.vercel.app',
+];
+
+app.use(cors({
+  origin: function (origin, callback) {
+    // Allow requests with no origin (like mobile apps, curl, postman)
+    if (!origin) return callback(null, true);
+    
+    if (allowedOrigins.indexOf(origin) !== -1) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  credentials: true,
+  exposedHeaders: ['Content-Disposition'], // Add if needed for file downloads
+}));
+
+// ==================== FIX Image Static Serving ====================
+app.use('/api/v1/img', express.static(path.join(__dirname, 'public/img'), {
+  setHeaders: (res, filePath) => {
+    // Allow from all origins for images
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
+    res.setHeader('Cache-Control', 'public, max-age=31536000');
+    
+    if (process.env.NODE_ENV !== 'production') {
+      console.log(`📸 Serving image: ${filePath}`);
+    }
   }
-  
-  res.setHeader('Access-Control-Allow-Credentials', 'true');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization, Cookie');
-  
-  // Handle preflight requests
-  if (req.method === 'OPTIONS') {
-    return res.status(200).end();
-  }
-  
-  next();
-});
+}));
+
+// Remove or comment out any other '/img' middleware
 
 // ==================== FIX 3: Update Image Serving ====================
 // Remove or comment out the old img middleware:

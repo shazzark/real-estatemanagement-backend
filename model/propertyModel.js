@@ -216,5 +216,23 @@ propertySchema.methods.getDistanceFrom = function (lat, lng) {
   return R * c; // Distance in km
 };
 
+propertySchema.virtual('fullImageUrls').get(function () {
+  if (!this.images || this.images.length === 0) return [];
+
+  const baseUrl =
+    process.env.NODE_ENV === 'production'
+      ? 'https://real-estatemanagement-backend-api.onrender.com'
+      : 'http://localhost:3000';
+
+  return this.images.map((img) => ({
+    ...img.toObject(),
+    fullUrl: `${baseUrl}/api/v1/img/properties/${img.filename}`,
+  }));
+});
+
+// Also update the toJSON and toObject options to include virtuals:
+propertySchema.set('toJSON', { virtuals: true });
+propertySchema.set('toObject', { virtuals: true });
+
 const Property = mongoose.model('Property', propertySchema);
 module.exports = Property;
