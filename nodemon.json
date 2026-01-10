@@ -1,0 +1,24 @@
+{
+  "watch": ["src"],
+  "ext": "js,json",
+
+  "ignore": [
+    "node_modules/*",
+    ".git/*",
+    ".vscode/*",
+    ".idea/*",
+    "dist/*",
+    "build/*",
+    "public/*",
+    "*.log",
+    ".env",
+    ".DS_Store",
+    "Thumbs.db",
+    ".gitignore",
+    "**/*.tmp",
+    "**/*~",
+    "OneDriveTemp/*"
+  ],
+  "delay": "500ms",
+  "legacyWatch": true
+}

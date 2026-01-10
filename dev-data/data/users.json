@@ -1,0 +1,50 @@
+[
+  {
+    "_id": "64b8f4e2f1c2a3d5e6f7a890",
+    "name": "chidinma okafor",
+    "email": "chidinma.okafor@example.com",
+    "phone": "+2349012345678",
+    "role": "user",
+    "password": "hashed_password_1"
+  },
+  {
+    "_id": "64b8f4e2f1c2a3d5e6f7a891",
+    "name": "adebola johnson",
+    "email": "adebola.johnson@example.com",
+    "phone": "+2349012345679",
+    "role": "user",
+    "password": "hashed_password_2"
+  },
+  {
+    "_id": "64b8f4e2f1c2a3d5e6f7a892",
+    "name": "fatima abubakar",
+    "email": "fatima.abubakar@example.com",
+    "phone": "+2349012345680",
+    "role": "user",
+    "password": "hashed_password_3"
+  },
+  {
+    "_id": "64b8f4e2f1c2a3d5e6f7a893",
+    "name": "chidozie okafor",
+    "email": "chidozie.okafor@example.com",
+    "phone": "+2349012345679",
+    "role": "user",
+    "password": "hashed_password_4"
+  },
+  {
+    "_id": "64b8f4e2f1c2a3d5e6f7a894",
+    "name": "admin user",
+    "email": "admin.user@example.com",
+    "phone": "+2349012345678",
+    "role": "admin",
+    "password": "hashed_password_5"
+  },
+  {
+    "_id": "64b8f4e2f1c2a3d5e6f7a895",
+    "name": "sales agent",
+    "email": "sales.agent@example.com",
+    "phone": "+2349012345678",
+    "role": "user",
+    "password": "hashed_password_6"
+  }
+]
