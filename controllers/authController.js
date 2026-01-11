@@ -153,7 +153,7 @@ exports.signup = catchAsync(async (req, res, next) => {
     console.log('Could not send verification email:', err.message);
   }
 
-  createSendToken(newUser, 201, res);
+  createSendToken(newUser, 201, req, res);
 });
 
 // exports.login = catchAsync(async (req, res, next) => {
@@ -197,7 +197,7 @@ exports.login = catchAsync(async (req, res, next) => {
     return next(new AppError('Incorrect email or password', 401));
   }
 
-  createSendToken(user, 200, res);
+  createSendToken(user, 200, req, res);
 });
 
 exports.logout = (req, res) => {
