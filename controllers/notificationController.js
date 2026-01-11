@@ -7,13 +7,68 @@ const AppError = require('../utils/appError');
 // NOTIFICATION CRUD
 // ======================
 
+// exports.getAllNotifications = catchAsync(async (req, res, next) => {
+//   // Filter for current user's notifications
+//   const filter = { user: req.user.id };
+//   console.log('=== NOTIFICATIONS DEBUG ===');
+//   console.log('User ID from req.user:', req.user?.id);
+//   console.log('Full req.user:', req.user);
+//   console.log('======================');
+
+//   // Additional filters
+//   if (req.query.read !== undefined) {
+//     filter.read = req.query.read === 'true';
+//   }
+
+//   if (req.query.type) {
+//     filter.type = req.query.type;
+//   }
+
+//   if (req.query.important === 'true') {
+//     filter.isImportant = true;
+//   }
+
+//   // Sorting
+//   let sort = '-createdAt'; // Default: newest first
+//   if (req.query.sort === 'oldest') {
+//     sort = 'createdAt';
+//   }
+
+//   // Pagination
+//   const page = req.query.page * 1 || 1;
+//   const limit = req.query.limit * 1 || 20;
+//   const skip = (page - 1) * limit;
+
+//   // Execute query
+//   const notifications = await Notification.find(filter)
+//     .sort(sort)
+//     .skip(skip)
+//     .limit(limit);
+
+//   // Get total count for pagination
+//   const total = await Notification.countDocuments(filter);
+
+//   // Get unread count
+//   const unreadCount = await Notification.countDocuments({
+//     user: req.user.id,
+//     read: false,
+//   });
+
+//   res.status(200).json({
+//     status: 'success',
+//     results: notifications.length,
+//     unreadCount,
+//     total,
+//     page,
+//     totalPages: Math.ceil(total / limit),
+//     data: {
+//       notifications,
+//     },
+//   });
+// });
 exports.getAllNotifications = catchAsync(async (req, res, next) => {
-  // Filter for current user's notifications
-  const filter = { user: req.user.id };
-  console.log('=== NOTIFICATIONS DEBUG ===');
-  console.log('User ID from req.user:', req.user?.id);
-  console.log('Full req.user:', req.user);
-  console.log('======================');
+  // Use req.user._id (ObjectId) instead of req.user.id (string)
+  const filter = { user: req.user._id };
 
   // Additional filters
   if (req.query.read !== undefined) {
@@ -48,9 +103,9 @@ exports.getAllNotifications = catchAsync(async (req, res, next) => {
   // Get total count for pagination
   const total = await Notification.countDocuments(filter);
 
-  // Get unread count
+  // Get unread count - use req.user._id here too
   const unreadCount = await Notification.countDocuments({
-    user: req.user.id,
+    user: req.user._id,
     read: false,
   });
 
@@ -70,7 +125,7 @@ exports.getAllNotifications = catchAsync(async (req, res, next) => {
 exports.getNotification = catchAsync(async (req, res, next) => {
   const notification = await Notification.findOne({
     _id: req.params.id,
-    user: req.user.id,
+    user: req.user._id,
   });
 
   if (!notification) {
@@ -93,7 +148,7 @@ exports.getNotification = catchAsync(async (req, res, next) => {
 
 exports.createNotification = catchAsync(async (req, res, next) => {
   // Auto-set user to current user if not provided
-  if (!req.body.user) req.body.user = req.user.id;
+  if (!req.body.user) req.body.user = req.user._id;
 
   // Check if user exists
   const user = await User.findById(req.body.user);
@@ -121,7 +176,7 @@ exports.createNotification = catchAsync(async (req, res, next) => {
 exports.updateNotification = catchAsync(async (req, res, next) => {
   const notification = await Notification.findOne({
     _id: req.params.id,
-    user: req.user.id,
+    user: req.user._id,
   });
 
   if (!notification) {
@@ -138,7 +193,7 @@ exports.updateNotification = catchAsync(async (req, res, next) => {
   }
 
   const updatedNotification = await Notification.findByIdAndUpdate(
-    req.params.id,
+    req.user._id,
     allowedUpdates,
     {
       new: true,
@@ -157,7 +212,7 @@ exports.updateNotification = catchAsync(async (req, res, next) => {
 exports.deleteNotification = catchAsync(async (req, res, next) => {
   const notification = await Notification.findOne({
     _id: req.params.id,
-    user: req.user.id,
+    user: req.user._id,
   });
 
   if (!notification) {
@@ -180,7 +235,7 @@ exports.markAsRead = catchAsync(async (req, res, next) => {
   const notification = await Notification.findOneAndUpdate(
     {
       _id: req.params.id,
-      user: req.user.id,
+      user: req.user._id,
     },
     { read: true },
     { new: true, runValidators: true },
@@ -200,7 +255,7 @@ exports.markAsRead = catchAsync(async (req, res, next) => {
 
 exports.markAllAsRead = catchAsync(async (req, res, next) => {
   await Notification.updateMany(
-    { user: req.user.id, read: false },
+    { user: req.user._id, read: false },
     { read: true },
   );
 
@@ -212,7 +267,7 @@ exports.markAllAsRead = catchAsync(async (req, res, next) => {
 
 exports.deleteAllRead = catchAsync(async (req, res, next) => {
   await Notification.deleteMany({
-    user: req.user.id,
+    user: req.user._id,
     read: true,
   });
 
@@ -228,7 +283,7 @@ exports.deleteAllRead = catchAsync(async (req, res, next) => {
 
 exports.getUnreadCount = catchAsync(async (req, res, next) => {
   const count = await Notification.countDocuments({
-    user: req.user.id,
+    user: req.user._id,
     read: false,
   });
 
@@ -243,7 +298,7 @@ exports.getUnreadCount = catchAsync(async (req, res, next) => {
 exports.getNotificationStats = catchAsync(async (req, res, next) => {
   const stats = await Notification.aggregate([
     {
-      $match: { user: req.user.id },
+      $match: { user: req.user._id },
     },
     {
       $group: {
