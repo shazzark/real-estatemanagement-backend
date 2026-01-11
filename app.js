@@ -29,48 +29,36 @@ const agentApplicationRoutes = require('./routes/agentApplicationRoutes');
 
 const app = express();
 
-/* =========================================================
-   ✅ REQUIRED FIX FOR RENDER + EXPRESS-RATE-LIMIT
-   ========================================================= */
-app.set('trust proxy', 1);
-
-// ==================== FIX 1: Update CORS ====================
-// app.use(
-//   cors({
-//     origin: [
-//       'http://localhost:3001',
-//       'http://172.23.192.1:3001',
-//       'https://real-estate-frontend.onrender.com',
-//       'http://localhost:3000',
-//       'https://real-estate-frontend.vercel.app',
-//     ],
-//     credentials: true,
-//   }),
-// );
-
 app.use(cookieParser());
 
 // SET SECURITY HTTP HEADERS
 app.use(helmet());
 
 // ==================== FIX CORS for Images ====================
-const allowedOrigins = ['http://localhost:3000', 'http://localhost:3001'];
+// const allowedOrigins = ['http://localhost:3000', 'http://localhost:3001'];
 
+// Quick fix - replace your entire CORS config with:
 app.use(
   cors({
-    origin: function (origin, callback) {
-      if (!origin) return callback(null, true); // allow Postman or curl
-
-      if (allowedOrigins.indexOf(origin) !== -1) {
-        callback(null, true);
-      } else {
-        callback(new Error('Not allowed by CORS'));
-      }
-    },
-    credentials: true, // must be true to allow cookies
-    exposedHeaders: ['Content-Disposition'],
+    origin: true, // Allow ALL origins temporarily
+    credentials: true,
   }),
 );
+// app.use(
+//   cors({
+//     origin: function (origin, callback) {
+//       if (!origin) return callback(null, true); // allow Postman or curl
+
+//       if (allowedOrigins.indexOf(origin) !== -1) {
+//         callback(null, true);
+//       } else {
+//         callback(new Error('Not allowed by CORS'));
+//       }
+//     },
+//     credentials: true, // must be true to allow cookies
+//     exposedHeaders: ['Content-Disposition'],
+//   }),
+// );
 
 // Add this after CORS but before routes
 app.use((req, res, next) => {
