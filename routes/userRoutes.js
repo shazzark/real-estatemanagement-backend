@@ -10,7 +10,7 @@ router.post('/login', authController.login);
 router.get('/logout', authController.logout);
 router.post('/forgotPassword', authController.forgotPassword);
 router.patch('/resetPassword/:token', authController.resetPassword);
-router.patch('/verifyEmail/:token', authController.verifyEmail);
+// router.patch('/verifyEmail/:token', authController.verifyEmail);
 // Add these routes right after your other routes
 router.get('/debug-env', (req, res) => {
   res.json({
