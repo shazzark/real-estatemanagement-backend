@@ -10,7 +10,7 @@ const mongoose = require('mongoose');
 
 exports.getAllWishlistItems = catchAsync(async (req, res, next) => {
   // Filter for current user's wishlist
-  const filter = { user: req.user.id };
+  const filter = { user: req.user._id };
 
   // Additional filters
   if (req.query.tags) {
@@ -48,7 +48,7 @@ exports.getAllWishlistItems = catchAsync(async (req, res, next) => {
   const total = await Wishlist.countDocuments(filter);
 
   // Get wishlist count
-  const wishlistCount = await Wishlist.getWishlistCount(req.user.id);
+  const wishlistCount = await Wishlist.getWishlistCount(req.user._id);
 
   res.status(200).json({
     status: 'success',
@@ -66,7 +66,7 @@ exports.getAllWishlistItems = catchAsync(async (req, res, next) => {
 exports.getWishlistItem = catchAsync(async (req, res, next) => {
   const wishlistItem = await Wishlist.findOne({
     _id: req.params.id,
-    user: req.user.id,
+    user: req.user._id,
   });
 
   if (!wishlistItem) {
@@ -98,7 +98,7 @@ exports.addToWishlist = catchAsync(async (req, res, next) => {
 
   // Check if already in wishlist
   const existingItem = await Wishlist.findOne({
-    user: req.user.id,
+    user: req.user._id,
     property: req.body.property,
   });
 
@@ -126,7 +126,7 @@ exports.addToWishlist = catchAsync(async (req, res, next) => {
   }
 
   // Auto-set user
-  req.body.user = req.user.id;
+  req.body.user = req.user._id;
 
   const wishlistItem = await Wishlist.create(req.body);
 
@@ -141,7 +141,7 @@ exports.addToWishlist = catchAsync(async (req, res, next) => {
 exports.updateWishlistItem = catchAsync(async (req, res, next) => {
   const wishlistItem = await Wishlist.findOne({
     _id: req.params.id,
-    user: req.user.id,
+    user: req.user._id,
   });
 
   if (!wishlistItem) {
@@ -186,7 +186,7 @@ exports.removeFromWishlist = catchAsync(async (req, res, next) => {
   if (req.params.propertyId) {
     const wishlistItem = await Wishlist.findOneAndUpdate(
       {
-        user: req.user.id,
+        user: req.user._id,
         property: req.params.propertyId,
       },
       { isActive: false },
@@ -207,7 +207,7 @@ exports.removeFromWishlist = catchAsync(async (req, res, next) => {
   // Option 2: Delete by wishlist item ID
   const wishlistItem = await Wishlist.findOneAndDelete({
     _id: req.params.id,
-    user: req.user.id,
+    user: req.user._id,
   });
 
   if (!wishlistItem) {
@@ -233,7 +233,7 @@ exports.checkInWishlist = catchAsync(async (req, res, next) => {
     return next(new AppError('No property found with that ID', 404));
   }
 
-  const inWishlist = await Wishlist.isInWishlist(req.user.id, propertyId);
+  const inWishlist = await Wishlist.isInWishlist(req.user._id, propertyId);
 
   res.status(200).json({
     status: 'success',
@@ -247,7 +247,7 @@ exports.checkInWishlist = catchAsync(async (req, res, next) => {
 exports.getWishlistStats = catchAsync(async (req, res, next) => {
   const stats = await Wishlist.aggregate([
     {
-      $match: { user: req.user.id, isActive: { $ne: false } },
+      $match: { user: req.user._id, isActive: { $ne: false } },
     },
     {
       $lookup: {
@@ -445,7 +445,7 @@ exports.bulkAddToWishlist = catchAsync(async (req, res, next) => {
 
   // Create wishlist items for new properties
   const wishlistItems = newPropertyIds.map((propertyId) => ({
-    user: req.user.id,
+    user: req.user._id,
     property: propertyId,
   }));
 
@@ -463,7 +463,7 @@ exports.bulkAddToWishlist = catchAsync(async (req, res, next) => {
 
 exports.toggleWishlist = catchAsync(async (req, res, next) => {
   const { property } = req.body;
-  const userId = req.user.id;
+  const userId = req.user._id;
 
   if (!property) {
     return next(new AppError('Property ID is required', 400));
@@ -534,7 +534,7 @@ exports.toggleWishlist = catchAsync(async (req, res, next) => {
 
 exports.clearWishlist = catchAsync(async (req, res, next) => {
   await Wishlist.updateMany(
-    { user: req.user.id, isActive: true },
+    { user: req.user._id, isActive: true },
     { isActive: false },
   );
 
