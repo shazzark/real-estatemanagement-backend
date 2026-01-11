@@ -30,7 +30,11 @@ app.use(cookieParser());
 app.set('trust proxy', 1);
 
 // SECURITY HEADERS
-app.use(helmet());
+app.use(
+  helmet({
+    crossOriginResourcePolicy: { policy: 'cross-origin' }, // allow cross-origin resources
+  }),
+);
 
 // ------------------- CORS -------------------
 // Allowed frontend origins
