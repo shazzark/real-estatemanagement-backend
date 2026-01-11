@@ -61,6 +61,6 @@ router.patch('/updateMyPassword', authController.updatePassword);
 router.delete('/deleteMe', userController.deleteMe);
 
 // Optional: send verification email again
-router.post('/sendVerificationEmail', authController.sendVerificationEmail);
+// router.post('/sendVerificationEmail', authController.sendVerificationEmail);
 
 module.exports = router;
