@@ -35,6 +35,9 @@ const signToken = (id) => {
 //   });
 // };
 const createSendToken = (user, statusCode, req, res) => {
+  console.log('=== SETTING COOKIE ===');
+  console.log('Cookie options:', cookieOptions);
+  console.log('Token (first 20 chars):', token.substring(0, 20));
   const token = signToken(user._id);
 
   // const isProduction = process.env.NODE_ENV === 'production';
@@ -109,6 +112,14 @@ exports.logout = (req, res) => {
 };
 
 exports.protect = catchAsync(async (req, res, next) => {
+  console.log('=== PROTECT MIDDLEWARE ===');
+  console.log('Authorization header:', req.headers.authorization);
+  console.log('Cookies received:', req.cookies);
+  console.log('JWT cookie:', req.cookies.jwt);
+  console.log('URL:', req.originalUrl);
+  console.log('📄 Auth header:', req.headers.authorization || 'None');
+  console.log('🌐 Origin header:', req.headers.origin || 'None');
+  console.log('======================');
   // 1) Getting token and check of it's there
   let token;
   if (
