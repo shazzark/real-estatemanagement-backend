@@ -54,12 +54,7 @@ app.use(cookieParser());
 app.use(helmet());
 
 // ==================== FIX CORS for Images ====================
-const allowedOrigins = [
-  'http://localhost:3000',
-  'http://localhost:3001',
-  'https://real-estate-frontend.vercel.app',
-  'https://real-estate-frontend.onrender.com',
-];
+const allowedOrigins = ['http://localhost:3000', 'http://localhost:3001'];
 
 app.use(
   cors({
@@ -77,6 +72,13 @@ app.use(
   }),
 );
 
+// Add this after CORS but before routes
+app.use((req, res, next) => {
+  console.log(`🌐 ${new Date().toISOString()} ${req.method} ${req.path}`);
+  console.log('Origin:', req.headers.origin);
+  console.log('Cookies:', req.cookies);
+  next();
+});
 // ==================== FIX Image Static Serving ====================
 app.use(
   '/api/v1/img',
