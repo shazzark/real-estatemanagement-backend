@@ -10,9 +10,7 @@ const hpp = require('hpp');
 const cors = require('cors');
 const path = require('path');
 const cookieParser = require('cookie-parser');
-// const dotenv = require('dotenv');
-
-// dotenv.config({ path: './config.env' });
+const multer = require('multer');
 
 const propertiesRouter = require('./routes/propertiesRoutes');
 const userRouter = require('./routes/userRoutes');
@@ -25,96 +23,47 @@ const NotificationRouter = require('./routes/notificationRoutes');
 const paymentRoutes = require('./routes/paymentRoutes');
 const agentApplicationRoutes = require('./routes/agentApplicationRoutes');
 
-// const authRouter = require('./routes/authRoutes');
-
 const app = express();
 
+// ------------------- MIDDLEWARES -------------------
 app.use(cookieParser());
-
 app.set('trust proxy', 1);
 
-// SET SECURITY HTTP HEADERS
+// SECURITY HEADERS
 app.use(helmet());
 
-// ==================== FIX CORS for Images ====================
-// const allowedOrigins = ['http://localhost:3000', 'http://localhost:3001'];
+// ------------------- CORS -------------------
+// Allowed frontend origins
+const allowedOrigins = [
+  'http://localhost:3001',
+  // 'https://your-frontend-domain.com', // replace with your deployed frontend
+];
 
-// Quick fix - replace your entire CORS config with:
 app.use(
   cors({
-    origin: true, // Allow ALL origins temporarily
-    credentials: true,
-  }),
-);
-// app.use(
-//   cors({
-//     origin: function (origin, callback) {
-//       if (!origin) return callback(null, true); // allow Postman or curl
-
-//       if (allowedOrigins.indexOf(origin) !== -1) {
-//         callback(null, true);
-//       } else {
-//         callback(new Error('Not allowed by CORS'));
-//       }
-//     },
-//     credentials: true, // must be true to allow cookies
-//     exposedHeaders: ['Content-Disposition'],
-//   }),
-// );
-
-// Add this after CORS but before routes
-app.use((req, res, next) => {
-  console.log(`🌐 ${new Date().toISOString()} ${req.method} ${req.path}`);
-  console.log('Origin:', req.headers.origin);
-  console.log('Cookies:', req.cookies);
-  next();
-});
-// ==================== FIX Image Static Serving ====================
-app.use(
-  '/api/v1/img',
-  express.static(path.join(__dirname, 'public/img'), {
-    setHeaders: (res, filePath) => {
-      res.setHeader('Access-Control-Allow-Origin', '*');
-      res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
-      res.setHeader('Cache-Control', 'public, max-age=31536000');
-
-      if (process.env.NODE_ENV !== 'production') {
-        console.log(`📸 Serving image: ${filePath}`);
-      }
+    origin: function (origin, callback) {
+      if (!origin) return callback(null, true); // allow Postman / curl
+      if (allowedOrigins.includes(origin)) return callback(null, true);
+      callback(new Error('Not allowed by CORS'));
     },
+    credentials: true, // allow cookies
+    exposedHeaders: ['Content-Disposition'], // for file downloads
   }),
 );
 
-// ==================== FIX 3: Update Image Serving ====================
-app.use(
-  '/img',
-  express.static(path.join(__dirname, 'public/img'), {
-    setHeaders: (res, filePath) => {
-      res.setHeader('Access-Control-Allow-Origin', '*');
-      res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
-      res.setHeader('Cache-Control', 'public, max-age=31536000');
-
-      if (process.env.NODE_ENV !== 'production') {
-        console.log(`Serving image: ${filePath}`);
-      }
-    },
-  }),
-);
-
-// for development logging
+// Logger for requests
 if (process.env.NODE_ENV !== 'production') {
   app.use(morgan('dev'));
 }
 
-// ==================== RATE LIMITER ====================
+// ------------------- RATE LIMIT -------------------
 const limiter = rateLimit({
   max: 100,
   windowMs: 60 * 60 * 1000,
-  message: 'too many request from this IP, try again later',
+  message: 'Too many requests from this IP, try again later',
 });
 
-// app.use('/api', limiter);
-
+// Apply rate limiting to all API routes
 app.use('/api', (req, res, next) => {
   // Skip rate-limit for file uploads
   if (
@@ -123,21 +72,18 @@ app.use('/api', (req, res, next) => {
   ) {
     return next();
   }
-
-  return limiter(req, res, next);
+  limiter(req, res, next);
 });
 
-// ==================== BODY PARSERS ====================
+// ------------------- BODY PARSERS -------------------
 app.use(express.json({ limit: '10kb' }));
 app.use(express.urlencoded({ limit: '10mb', extended: true }));
 
-// data sanitization against NoSQL injection
+// DATA SANITIZATION
 app.use(mongoSanitize());
-
-// data sanitization against XSS
 app.use(xss());
 
-// prevent parameter pollution
+// PREVENT PARAMETER POLLUTION
 app.use(
   hpp({
     whitelist: [
@@ -158,7 +104,55 @@ app.use((req, res, next) => {
   next();
 });
 
-// ==================== ROUTES ====================
+// ------------------- STATIC FILES & IMAGES -------------------
+// Serve images with proper headers
+app.use(
+  '/api/v1/img',
+  express.static(path.join(__dirname, 'public/img'), {
+    setHeaders: (res, filePath) => {
+      res.setHeader('Access-Control-Allow-Origin', '*');
+      res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
+      res.setHeader('Cache-Control', 'public, max-age=31536000');
+      if (process.env.NODE_ENV !== 'production') {
+        console.log(`📸 Serving image: ${filePath}`);
+      }
+    },
+  }),
+);
+
+app.use(
+  '/img',
+  express.static(path.join(__dirname, 'public/img'), {
+    setHeaders: (res, filePath) => {
+      res.setHeader('Access-Control-Allow-Origin', '*');
+      res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
+      res.setHeader('Cache-Control', 'public, max-age=31536000');
+      if (process.env.NODE_ENV !== 'production') {
+        console.log(`📸 Serving image: ${filePath}`);
+      }
+    },
+  }),
+);
+
+// ------------------- MULTER FOR FILE UPLOADS -------------------
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, 'public/img'); // save to public/img
+  },
+  filename: (req, file, cb) => {
+    const ext = file.mimetype.split('/')[1];
+    cb(null, `property-${Date.now()}.${ext}`);
+  },
+});
+
+const upload = multer({ storage });
+
+// Example route to test image upload
+app.post('/api/v1/upload', upload.single('image'), (req, res) => {
+  res.status(201).json({ status: 'success', file: req.file });
+});
+
+// ------------------- ROUTES -------------------
 app.use('/api/v1/properties', propertiesRouter);
 app.use('/api/v1/users', userRouter);
 app.use('/api/v1/location', locationRouter);
@@ -170,17 +164,17 @@ app.use('/api/v1/review', reviewRouter);
 app.use('/api/v1/payments', paymentRoutes);
 app.use('/api/v1/agent-applications', agentApplicationRoutes);
 
+// Test root route
 app.get('/', (req, res) => {
-  res.status(200).json({
-    status: 'ok',
-    message: 'Real Estate API is running',
-  });
+  res.status(200).json({ status: 'ok', message: 'Real Estate API is running' });
 });
 
+// ------------------- UNHANDLED ROUTES -------------------
 app.all('*', (req, res, next) => {
-  next(new AppError(`cant find ${req.originalUrl} on this server`));
+  next(new AppError(`Can't find ${req.originalUrl} on this server`, 404));
 });
 
+// GLOBAL ERROR HANDLER
 app.use(globalErrorHandler);
 
 module.exports = app;
