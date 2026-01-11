@@ -38,23 +38,29 @@ app.use(
 
 // ------------------- CORS -------------------
 // Allowed frontend origins
-const allowedOrigins = [
-  'http://localhost:3001',
-  'http://192.168.0.146:3001',
-  // 'https://your-frontend-domain.com', // replace with your deployed frontend
-];
-
+// const allowedOrigins = [
+//   'http://localhost:3001',
+//   'http://192.168.0.146:3001',
+//   // 'https://your-frontend-domain.com', // replace with your deployed frontend
+// ];
 app.use(
   cors({
-    origin: function (origin, callback) {
-      if (!origin) return callback(null, true); // allow Postman / curl
-      if (allowedOrigins.includes(origin)) return callback(null, true);
-      callback(new Error('Not allowed by CORS'));
-    },
-    credentials: true, // allow cookies
-    exposedHeaders: ['Content-Disposition'], // for file downloads
+    origin: 'http://localhost:3001',
+    credentials: true,
   }),
 );
+
+// app.use(
+//   cors({
+//     origin: function (origin, callback) {
+//       if (!origin) return callback(null, true); // allow Postman / curl
+//       if (allowedOrigins.includes(origin)) return callback(null, true);
+//       callback(new Error('Not allowed by CORS'));
+//     },
+//     credentials: true, // allow cookies
+//     exposedHeaders: ['Content-Disposition'], // for file downloads
+//   }),
+// );
 
 // Logger for requests
 if (process.env.NODE_ENV !== 'production') {

@@ -37,7 +37,7 @@ const signToken = (id) => {
 const createSendToken = (user, statusCode, req, res) => {
   const token = signToken(user._id);
 
-  const isProduction = process.env.NODE_ENV === 'production';
+  // const isProduction = process.env.NODE_ENV === 'production';
 
   // FIXED COOKIE SETTINGS:
   const cookieOptions = {
@@ -45,8 +45,9 @@ const createSendToken = (user, statusCode, req, res) => {
       Date.now() + process.env.JWT_COOKIE_EXPIRES_IN * 24 * 60 * 60 * 1000,
     ),
     httpOnly: true,
-    secure: isProduction, // Render is always HTTPS
+    secure: true, // Render is always HTTPS
     sameSite: 'none', // ← ADD THIS LINE! CRITICAL!
+    domain: 'real-estatemanagement-backend-api.onrender.com',
   };
 
   res.cookie('jwt', token, cookieOptions);
