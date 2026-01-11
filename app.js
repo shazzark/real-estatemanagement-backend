@@ -40,6 +40,7 @@ app.use(
 // Allowed frontend origins
 const allowedOrigins = [
   'http://localhost:3001',
+  'http://192.168.0.146:3001',
   // 'https://your-frontend-domain.com', // replace with your deployed frontend
 ];
 
