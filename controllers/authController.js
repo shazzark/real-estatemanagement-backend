@@ -37,13 +37,15 @@ const signToken = (id) => {
 const createSendToken = (user, statusCode, req, res) => {
   const token = signToken(user._id);
 
+  const isProduction = process.env.NODE_ENV === 'production';
+
   // FIXED COOKIE SETTINGS:
   const cookieOptions = {
     expires: new Date(
       Date.now() + process.env.JWT_COOKIE_EXPIRES_IN * 24 * 60 * 60 * 1000,
     ),
     httpOnly: true,
-    secure: true, // Render is always HTTPS
+    secure: isProduction, // Render is always HTTPS
     sameSite: 'none', // ← ADD THIS LINE! CRITICAL!
   };
 
@@ -95,10 +97,11 @@ exports.login = catchAsync(async (req, res, next) => {
 });
 
 exports.logout = (req, res) => {
+  const isProduction = process.env.NODE_ENV === 'production';
   res.cookie('jwt', 'loggedout', {
     expires: new Date(Date.now() + 10 * 1000),
     httpOnly: true,
-    secure: true, // Add this
+    secure: isProduction, // Add this
     sameSite: 'none', // Add this
   });
   res.status(200).json({ status: 'success' });
