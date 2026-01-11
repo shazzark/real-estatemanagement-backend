@@ -32,7 +32,7 @@ app.set('trust proxy', 1);
 // SECURITY HEADERS
 app.use(
   helmet({
-    crossOriginResourcePolicy: { policy: 'cross-origin' }, // allow cross-origin resources
+    crossOriginResourcePolicy: false,
   }),
 );
 
