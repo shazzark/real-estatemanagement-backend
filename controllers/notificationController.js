@@ -10,6 +10,10 @@ const AppError = require('../utils/appError');
 exports.getAllNotifications = catchAsync(async (req, res, next) => {
   // Filter for current user's notifications
   const filter = { user: req.user.id };
+  console.log('=== NOTIFICATIONS DEBUG ===');
+  console.log('User ID from req.user:', req.user?.id);
+  console.log('Full req.user:', req.user);
+  console.log('======================');
 
   // Additional filters
   if (req.query.read !== undefined) {
