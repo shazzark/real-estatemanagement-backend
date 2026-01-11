@@ -9,8 +9,19 @@ const mongoose = require('mongoose');
 // ======================
 
 exports.getAllWishlistItems = catchAsync(async (req, res, next) => {
+  console.log('🔍 [WISHLIST getAll] User:', req.user);
+  console.log('🔍 [WISHLIST getAll] Using user ID:', req.user._id);
   // Filter for current user's wishlist
   const filter = { user: req.user._id };
+  console.log('🔍 Testing MongoDB connection...');
+
+  // Test if user exists
+  const userTest = await mongoose.model('User').findById(req.user._id);
+  console.log('🔍 User found in DB:', !!userTest);
+
+  // Test simple query
+  const testQuery = await Wishlist.find({ user: req.user._id }).limit(1);
+  console.log('🔍 Test query result:', testQuery.length);
 
   // Additional filters
   if (req.query.tags) {
@@ -64,6 +75,9 @@ exports.getAllWishlistItems = catchAsync(async (req, res, next) => {
 });
 
 exports.getWishlistItem = catchAsync(async (req, res, next) => {
+  console.log('🔍 [WISHLIST] User object:', req.user);
+  console.log('🔍 [WISHLIST] User ID:', req.user?._id);
+  console.log('🔍 [WISHLIST] User ID type:', typeof req.user?._id);
   const wishlistItem = await Wishlist.findOne({
     _id: req.params.id,
     user: req.user._id,
