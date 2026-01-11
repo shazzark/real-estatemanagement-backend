@@ -53,6 +53,8 @@ const createSendToken = (user, statusCode, req, res) => {
     domain: 'real-estatemanagement-backend-api.onrender.com',
   };
 
+  console.log('🍪 Setting cookie with options:', cookieOptions); // 2. Now it's safe to USE it here
+  console.log('🔑 Token (first 20 chars):', token.substring(0, 20));
   res.cookie('jwt', token, cookieOptions);
 
   // Remove password from output
