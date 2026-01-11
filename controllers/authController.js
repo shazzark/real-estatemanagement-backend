@@ -35,10 +35,10 @@ const signToken = (id) => {
 //   });
 // };
 const createSendToken = (user, statusCode, req, res) => {
-  console.log('=== SETTING COOKIE ===');
-  console.log('Cookie options:', cookieOptions);
-  console.log('Token (first 20 chars):', token.substring(0, 20));
   const token = signToken(user._id);
+  console.log('=== SETTING COOKIE ===');
+  // console.log('Cookie options:', cookieOptions);
+  console.log('Token (first 20 chars):', token.substring(0, 20));
 
   // const isProduction = process.env.NODE_ENV === 'production';
 
