@@ -45,7 +45,7 @@ app.use(
 // ];
 app.use(
   cors({
-    origin: 'http://localhost:3001',
+    origin: 'http://localhost:3001 , https://luxe-estates-app.vercel.app/',
     credentials: true,
   }),
 );

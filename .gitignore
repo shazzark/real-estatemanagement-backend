@@ -9,3 +9,7 @@ npm-debug.log
 *.env
 config/local.js
 .env.local
+
+node_modules
+.next
+.env*
