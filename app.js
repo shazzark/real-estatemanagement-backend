@@ -47,6 +47,10 @@ app.use(
   cors({
     origin: ['http://localhost:3001', 'https://luxe-estates-app.vercel.app'],
     credentials: true,
+    exposedHeaders: ['Set-Cookie'],
+    // Add these options:
+    allowedHeaders: ['Content-Type', 'Authorization', 'Cookie'],
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   }),
 );
 
