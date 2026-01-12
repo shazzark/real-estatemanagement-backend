@@ -102,6 +102,21 @@ const createSendToken = (user, statusCode, req, res) => {
   });
 };
 
+// exports.signup = catchAsync(async (req, res, next) => {
+//   const newUser = await User.create({
+//     name: req.body.name,
+//     email: req.body.email,
+//     password: req.body.password,
+//     passwordConfirm: req.body.passwordConfirm,
+//   });
+
+//   // const url = `${req.protocol}://${req.get('host')}/me`;
+//   // // console.log(url);
+//   // await new Email(newUser, url).sendWelcome();
+
+//   createSendToken(newUser, 201, req, res);
+// });
+
 exports.signup = catchAsync(async (req, res, next) => {
   const newUser = await User.create({
     name: req.body.name,
@@ -110,9 +125,13 @@ exports.signup = catchAsync(async (req, res, next) => {
     passwordConfirm: req.body.passwordConfirm,
   });
 
-  // const url = `${req.protocol}://${req.get('host')}/me`;
-  // // console.log(url);
-  // await new Email(newUser, url).sendWelcome();
+  try {
+    const url = `${req.protocol}://${req.get('host')}/me`;
+    await new Email(newUser, url).sendWelcome();
+  } catch (emailError) {
+    console.error('Failed to send welcome email:', emailError);
+    // Don't fail signup if email fails - just log it
+  }
 
   createSendToken(newUser, 201, req, res);
 });
