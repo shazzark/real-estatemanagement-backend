@@ -50,7 +50,7 @@ const createSendToken = (user, statusCode, req, res) => {
     httpOnly: true,
     secure: true, // Render is always HTTPS
     sameSite: 'none', // ← ADD THIS LINE! CRITICAL!
-    domain: 'real-estatemanagement-backend-api.onrender.com',
+    // domain: 'real-estatemanagement-backend-api.onrender.com',
   };
 
   console.log('🍪 Setting cookie with options:', cookieOptions); // 2. Now it's safe to USE it here
